@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Пазл в браузере</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+    /* Контейнер для пазла (целевое место) */
+    #puzzle-board {
+      width: 300px;
+      height: 300px;
+      border: 2px dashed #888;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+    }
+    /* Контейнер для исходных кусочков */
+    #pieces-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+    /* Стили для каждого кусочка */
+    .piece {
+      width: 100px;
+      height: 100px;
+      background-image: url("puzzle.png"); /* Замените на URL вашей картинки */
+      background-size: 300px 300px; /* Размеры пазла */
+      border: 1px solid #ccc;
+      cursor: grab;
+    }
+    /* Стили для ячеек доски */
+    .cell {
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Контейнер с исходными кусочками -->
+  <div id="pieces-container"></div>
+
+  <!-- Контейнер, куда нужно перетащить кусочки -->
+  <div id="puzzle-board"></div>
+
+  <script>
+    const rows = 3;
+    const cols = 3;
+    const piecesContainer = document.getElementById('pieces-container');
+    const puzzleBoard = document.getElementById('puzzle-board');
+
+    // Функция для создания кусочка пазла
+    function createPiece(row, col) {
+      const piece = document.createElement('div');
+      piece.classList.add('piece');
+      // Задаём позицию фона, чтобы отобразить нужную часть картинки
+      piece.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+      piece.setAttribute('draggable', true);
+      // Задаём data-атрибуты для идентификации позиции
+      piece.dataset.row = row;
+      piece.dataset.col = col;
+      return piece;
+    }
+
+    // Заполняем контейнер для кусочков (перемешаем их)
+    let pieces = [];
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        pieces.push(createPiece(row, col));
+      }
+    }
+
+    // Перемешиваем массив кусочков (функция Фишера-Йетса)
+    for (let i = pieces.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+    }
+
+    pieces.forEach(piece => piecesContainer.appendChild(piece));
+
+    // Создаём ячейки на доске пазла
+    for (let i = 0; i < rows * cols; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+      cell.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const pieceId = e.dataTransfer.getData('text/plain');
+        const draggedPiece = document.getElementById(pieceId);
+        // Если ячейка уже занята, можно добавить проверку или замену
+        if (!cell.hasChildNodes()) {
+          cell.appendChild(draggedPiece);
+        }
+      });
+      puzzleBoard.appendChild(cell);
+    }
+
+    // Обработчик события начала перетаскивания для каждого кусочка
+    pieces.forEach((piece, index) => {
+      // Уникальный id для каждого кусочка
+      piece.id = 'piece-' + index;
+      piece.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', piece.id);
+      });
+    });
+  </script>
+</body>
+</html>
